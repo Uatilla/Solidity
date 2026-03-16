@@ -5,11 +5,27 @@ import "forge-std/Test.sol";
 import "../src/Example.sol";
 
 contract ExampleTest is Test {
-    Example public example;
+    A public a;
+    B public b;
 
     function setUp() public {
-        example = new Example();
+        b = new B();
+        a = new A{ value: 1 ether }(address(b));
     }
 
-    function testExample() public view {}
+    function testExample() public {
+
+        assertEq(address(a).balance, 1 ether);
+        assertEq(address(b).balance, 0 ether);
+        a.payHalf();
+        assertEq(address(a).balance, 0.5 ether);
+        assertEq(address(b).balance, 0.5 ether);
+        a.payHalf();
+        assertEq(address(a).balance, 0.25 ether);
+        assertEq(address(b).balance, 0.75 ether);
+        a.payHalf();
+        assertEq(address(a).balance, 0.125 ether);
+        assertEq(address(b).balance, 0.875 ether);
+    }
+
 }

@@ -3,19 +3,32 @@ pragma solidity ^0.8.20;
 
 import "forge-std/console.sol";
 
-contract Example {
-    uint256 a = 55;
-    uint256 b; // storage slot - 0x0
-    bool c; // storage slot - 0x1
+contract A {
+    address b;
 
-    constructor() {
-        // SSTORE - store to some storage location
-        // SLOAD - read from some storage location
-        uint256 x;
-        assembly {
-            x := sload(0x0)
-        }
-        console.log(x);
-        console.log(a);
+    constructor(address _b) payable {
+        b = _b;
+
+        console.log(msg.value);
+        console.log(b.balance);
+        console.log(address(this).balance);
+        console.log("My Address: %s", address(this));
     }
+
+    function payHalf() external {
+        uint256 balance = address(this).balance;
+        (bool success, ) = b.call{value: balance / 2}("");
+        require(success);
+    }
+   
+}
+
+contract B {
+    address mostRecentPayer;
+    receive() external payable {
+        mostRecentPayer = msg.sender;
+        console.log("Most recent payer: %s", mostRecentPayer);
+    }
+
+
 }
