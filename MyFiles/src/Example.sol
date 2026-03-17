@@ -3,32 +3,38 @@ pragma solidity ^0.8.20;
 
 import "forge-std/console.sol";
 
+// REVERT
+// no state changes should have occured
+// no value should have been transferred
+// gas will still be paid for
 contract A {
     address b;
+    uint256 public errorsCount = 0;
 
-    constructor(address _b) payable {
+    constructor(address _b) {
         b = _b;
-
-        console.log(msg.value);
-        console.log(b.balance);
-        console.log(address(this).balance);
-        console.log("My Address: %s", address(this));
     }
 
-    function payHalf() external {
-        uint256 balance = address(this).balance;
-        (bool success, ) = b.call{value: balance / 2}("");
-        require(success);
+    function callB() external payable {
+        (bool success, bytes memory returnData) = b.call{value: 1 ether}("");
+        if (!success) {
+            console.logBytes(returnData);
+            console.logBytes32(keccak256("DoNotPayMe(uint256)"));
+            errorsCount++;
+        }
     }
-   
 }
 
 contract B {
-    address mostRecentPayer;
+    uint256 public x = 0;
+    // @notice nobody should ever pay this contract
+
+    // 4 byte
+    error DoNotPayMe(uint256);
+
     receive() external payable {
-        mostRecentPayer = msg.sender;
-        console.log("Most recent payer: %s", mostRecentPayer);
+        revert DoNotPayMe(msg.value);
+        x = 15;
+        //revert DoNotPayMe(msg.value);
     }
-
-
 }
